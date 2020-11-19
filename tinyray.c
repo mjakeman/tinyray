@@ -13,7 +13,8 @@
 #include "stb_image_write.h"
 #include <math.h>
 
-typedef unsigned char pixel;
+// A single byte-type representing one channel of a pixel
+typedef unsigned char byte;
 
 /* Minimal Floating Point Vector Maths - Author: Matthew Jakeman */
 typedef struct {
@@ -68,9 +69,9 @@ Vec3 vec3_normalise(Vec3 v) {
 
 Vec3 vec3_clamp(Vec3 v, float min_value, float max_value) {
 	return vec3_new(
-		min(max(v.x, min_value), max_value),
-		min(max(v.y, min_value), max_value),
-		min(max(v.z, min_value), max_value)
+		fmin(fmax(v.x, min_value), max_value),
+		fmin(fmax(v.y, min_value), max_value),
+		fmin(fmax(v.z, min_value), max_value)
 	);
 }
 // END - vectors
@@ -112,7 +113,6 @@ const static Vec3 Zero = {0};
 const static Vec3 Invalid = {-1, -1, -1};
 const static int FOV = 1; //3.1415/2;
 const static int MAX_DIST = 1000;
-const static int PROJ_DIST = 1;
 const static unsigned int WIDTH = 600;
 const static unsigned int HEIGHT = 600;
 
@@ -350,7 +350,7 @@ int mark[MARK_ROWS][MARK_COLS] = {
 // Draws a watermark on the screen using the above array
 // NOTE: Make sure size and stride do not cause the function to exceed
 // array bounds. This will cause a crash!
-void DrawWatermark(pixel *data) {
+void DrawWatermark(byte *data) {
     int start_x = 20;
     int start_y = 540;
     int size = 3, stride = 1;
@@ -364,14 +364,14 @@ void DrawWatermark(pixel *data) {
 			for (int x = x_corner; x < (x_corner + size); x++) {
 				for (int y = y_corner; y < (y_corner + size); y++) {
 					if (mark[j][i] == 0) {
-						data[(y*WIDTH + x) * 3 + 0] = (pixel)(i/(float)MARK_COLS * 255) % 180;
-						data[(y*WIDTH + x) * 3 + 1] = (pixel)(j/(float)MARK_ROWS * 255) % 180;
-						data[(y*WIDTH + x) * 3 + 2] = (pixel)240;
+						data[(y*WIDTH + x) * 3 + 0] = (byte)(i/(float)MARK_COLS * 255) % 180;
+						data[(y*WIDTH + x) * 3 + 1] = (byte)(j/(float)MARK_ROWS * 255) % 180;
+						data[(y*WIDTH + x) * 3 + 2] = (byte)240;
 					}
 					else {
-						data[(y*WIDTH + x) * 3 + 0] = (pixel)255;
-						data[(y*WIDTH + x) * 3 + 1] = (pixel)255;
-						data[(y*WIDTH + x) * 3 + 2] = (pixel)255;
+						data[(y*WIDTH + x) * 3 + 0] = (byte)255;
+						data[(y*WIDTH + x) * 3 + 1] = (byte)255;
+						data[(y*WIDTH + x) * 3 + 2] = (byte)255;
 					}
 				}
 			}
@@ -381,7 +381,7 @@ void DrawWatermark(pixel *data) {
 
 int main(void)
 {
-	pixel *data = malloc(sizeof(pixel) * 3 * WIDTH * HEIGHT);
+	byte *data = malloc(sizeof(byte) * 3 * WIDTH * HEIGHT);
 
 	// Materials
 	Material blue = material_new(vec3_new(69, 161, 255), 500);
@@ -415,9 +415,9 @@ int main(void)
 		for (int y = 0; y < HEIGHT; y++) {
 
 			// Background
-			data[(y*WIDTH + x) * 3 + 0] = (pixel)(y/(float)WIDTH * 255);
-			data[(y*WIDTH + x) * 3 + 1] = (pixel)(x/(float)HEIGHT * 255);
-			data[(y*WIDTH + x) * 3 + 2] = (pixel)160;
+			data[(y*WIDTH + x) * 3 + 0] = (byte)(y/(float)WIDTH * 255);
+			data[(y*WIDTH + x) * 3 + 1] = (byte)(x/(float)HEIGHT * 255);
+			data[(y*WIDTH + x) * 3 + 2] = (byte)160;
 			
 			// Get Pixel in World Coords
 			float x_world_coord = (2*(x + 0.5f)/(float)HEIGHT - 1) * screen_dim * aspect_ratio;
@@ -431,9 +431,9 @@ int main(void)
 
 			// Draw Geometry
 			if (colour.x != -1) {
-				data[(y*WIDTH + x) * 3 + 0] = (pixel)colour.x;
-				data[(y*WIDTH + x) * 3 + 1] = (pixel)colour.y;
-				data[(y*WIDTH + x) * 3 + 2] = (pixel)colour.z;
+				data[(y*WIDTH + x) * 3 + 0] = (byte)colour.x;
+				data[(y*WIDTH + x) * 3 + 1] = (byte)colour.y;
+				data[(y*WIDTH + x) * 3 + 2] = (byte)colour.z;
 			}
 		}
 	}
